@@ -1,0 +1,56 @@
+PCX/BMP/PNG -> PS1 Texture (4bpp,8bpp 16 RGB)
+XM -> PS1 MUSIC
+WAV -> PS1 ADPCM
+OBJ -> PS1 MODEL
+
+BCM -> PS1 MODEL
+SKL -> PS1 SKL
+
+PACK PS1 -> 128Kio bloc
+
+
+//Code
+PolySound(SFX,0,Volume);
+
+PolyLoadSAMPLE();
+PolyLoadMusic(0,buffer);
+PolyLoadMusic(1,buffer);
+PolyMusic(CH1,Volume);
+
+GAMELOOP(func)
+(
+EVENT
+
+GAMEPLAY
+
+
+COLLISION2D
+COLLISION3D
+
+SCENDE_DRAW
+)
+
+
+TIG
+TIG\0
+TC
+/
+2 wei
+2 height
+
+0x10 DATA
+
+(RGB16,2bpp,4bpp,8bpp,VQ,DX)
+
+SPG
+SPG0
+SC (PCM8/PCM16,ADPCM,PCM4)
+/
+2 FRQ
+
+0x10 DATA
+
+TPC0
+SIZE2 
+
+0x10
