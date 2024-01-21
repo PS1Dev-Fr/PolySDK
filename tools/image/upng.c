@@ -1000,7 +1000,7 @@ upng_error upng_decode(upng_t* upng)
 	 * verify general well-formed-ness */
 	while (chunk < upng->source.buffer + upng->source.size) {
 		unsigned long length;
-		//const unsigned char *data;	/*the data in the chunk */
+		const unsigned char *data;	/*the data in the chunk */
 
 		/* make sure chunk header is not larger than the total compressed */
 		if ((unsigned long)(chunk - upng->source.buffer + 12) > upng->source.size) {
@@ -1022,7 +1022,7 @@ upng_error upng_decode(upng_t* upng)
 		}
 
 		/* get pointer to payload */
-		//data = chunk + 8;
+		data = chunk + 8;
 
 		/* parse chunks */
 		if (upng_chunk_type(chunk) == CHUNK_IDAT) {
@@ -1143,7 +1143,7 @@ static upng_t* upng_new(void)
 	return upng;
 }
 
-upng_t* upng_new_from_bytes(const unsigned char* buffer, int size)
+upng_t* upng_new_from_bytes(const unsigned char* buffer, unsigned long size)
 {
 	upng_t* upng = upng_new();
 	if (upng == NULL) {
@@ -1156,47 +1156,39 @@ upng_t* upng_new_from_bytes(const unsigned char* buffer, int size)
 
 	return upng;
 }
-#include "LMP3D/LMP3D.h"
-upng_t* upng_new_from_file(char *filename,int offset,int size,void *obuffer)
+
+upng_t* upng_new_from_file(const char *filename)
 {
 	upng_t* upng;
 	unsigned char *buffer;
-	void *file;
-
+	FILE *file;
+	long size;
 
 	upng = upng_new();
 	if (upng == NULL) {
 		return NULL;
 	}
 
-	file = LMP3D_fopen(filename, "rb",obuffer,offset+size);
-
+	file = fopen(filename, "rb");
 	if (file == NULL) {
 		SET_ERROR(upng, UPNG_ENOTFOUND);
 		return upng;
 	}
 
-	if(size == 0)
-	{
-		/* get filesize */
-		LMP3D_fseek(file, 0, SEEK_END);
-		size = LMP3D_ftell(file);
-	}
-
-	//rewind(file);
-	LMP3D_fseek(file, offset, SEEK_SET);
+	/* get filesize */
+	fseek(file, 0, SEEK_END);
+	size = ftell(file);
+	rewind(file);
 
 	/* read contents of the file into the vector */
-	buffer = (unsigned char *)malloc(size);
+	buffer = (unsigned char *)malloc((unsigned long)size);
 	if (buffer == NULL) {
-		LMP3D_fclose(file);
+		fclose(file);
 		SET_ERROR(upng, UPNG_ENOMEM);
 		return upng;
 	}
-
-	//printf("size png %d\n",size);
-	LMP3D_fread(buffer, 1,size, file);
-	LMP3D_fclose(file);
+	fread(buffer, 1, (unsigned long)size, file);
+	fclose(file);
 
 	/* set the read buffer as our source buffer, with owning flag set */
 	upng->source.buffer = buffer;
@@ -1210,7 +1202,7 @@ void upng_free(upng_t* upng)
 {
 	/* deallocate image buffer */
 	if (upng->buffer != NULL) {
-		//free(upng->buffer);
+		free(upng->buffer);
 	}
 
 	/* deallocate source buffer, if necessary */
@@ -1286,68 +1278,4 @@ const unsigned char* upng_get_buffer(const upng_t* upng)
 unsigned upng_get_size(const upng_t* upng)
 {
 	return upng->size;
-}
-
-LMP3D_Texture *LMP3D_Load_png(char *adresse,int offset,void *buffer,int size)
-{
-	upng_t* upng;
-
-	//upng_new_from_bytes(buffer,size);
-	upng = upng_new_from_file(adresse,offset,size,buffer);
-
-	if (upng_get_error(upng) != UPNG_EOK) {
-		printf("error: %s %u %u\n",adresse, upng_get_error(upng), upng_get_error_line(upng));
-		return NULL;
-	}
-
-	upng_decode(upng);
-
-	LMP3D_Texture *texture = NULL;
-	texture = malloc(sizeof(LMP3D_Texture));
-	texture->pixel = NULL;
-	texture->palette = NULL;
-
-	texture->w = upng_get_width(upng);
-	texture->h = upng_get_height(upng);
-
-	switch (upng_get_components(upng))
-	{
-		case 1:
-			texture->format = LMP3D_FORMAT_LUM;
-		break;
-
-		case 2:
-			texture->format = LMP3D_FORMAT_LUMA;
-		break;
-
-		case 3:
-			texture->format = LMP3D_FORMAT_RGB888;
-		break;
-
-		case 4:
-			texture->format = LMP3D_FORMAT_RGBA8888;
-		break;
-
-		default:
-			texture->format = 0;
-		break;
-	}
-
-
-
-
-	LMP3D_Texture_Format_Init(texture);
-	texture->pixel = (void*)upng_get_buffer(upng);
-/*
-	texture->pixel = malloc(texture->size);
-
-	const unsigned char *data = upng_get_buffer(upng);
-
-	memcpy(texture->pixel,data, texture->size);
-*/
-	upng_free(upng);
-
-	LMP3D_Texture_Format_Convert(texture);
-
-	return texture;
 }

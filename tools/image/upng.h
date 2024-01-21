@@ -57,8 +57,8 @@ typedef enum upng_format {
 
 typedef struct upng_t upng_t;
 
-upng_t*		upng_new_from_bytes	(const unsigned char* buffer, int size);
-upng_t*		upng_new_from_file	(char* path,int offset, int size,void *buffer);
+upng_t*		upng_new_from_bytes	(const unsigned char* buffer, unsigned long size);
+upng_t*		upng_new_from_file	(const char* path);
 void		upng_free			(upng_t* upng);
 
 upng_error	upng_header			(upng_t* upng);

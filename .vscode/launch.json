@@ -1,0 +1,73 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug texture",
+      "type": "gdb",
+      "request": "attach",
+      "target": "localhost:3333",
+      "remote": true,
+      "cwd": "${workspaceFolder}",
+      "valuesFormatting": "parseText",
+      "executable": "${workspaceFolder}/tests/texture/texture.elf",
+      "stopAtConnect": true,
+      "gdbpath": "gdb-multiarch",
+      "windows": {
+        "gdbpath": "gdb-multiarch.exe"
+      },
+      "osx": {
+        "gdbpath": "gdb"
+      },
+      "autorun": [
+        "monitor reset shellhalt",
+        "load ${workspaceFolder}/tests/texture/texture.elf",
+        "tbreak main",
+        "continue"
+      ]
+    },
+    {
+      "name": "Debug png2tig",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/tools/image/png2tig",
+      "args": [
+        "${workspaceFolder}/tests/texture/minou16.png",
+        "${workspaceFolder}/tests/texture/minou16.tig"
+      ],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": true,
+      "MIMode": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    },
+    {
+      "name": "Debug bmp2tig",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/tools/image/bmp2tig",
+      "args": [
+        "${workspaceFolder}/tests/texture/minou16.bmp",
+        "${workspaceFolder}/tests/texture/minou16.tig"
+      ],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": true,
+      "MIMode": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    }
+  ]
+}
