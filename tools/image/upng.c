@@ -3,6 +3,7 @@ uPNG -- derived from LodePNG version 20100808
 
 Copyright (c) 2005-2010 Lode Vandevenne
 Copyright (c) 2010 Sean Middleditch
+Copyright (c) 2024 OlivierP-To8 for palette and transparency
 
 This software is provided 'as-is', without any express or implied
 warranty. In no event will the authors be held liable for any damages
@@ -36,6 +37,8 @@ freely, subject to the following restrictions:
 #define MAKE_DWORD_PTR(p) MAKE_DWORD((p)[0], (p)[1], (p)[2], (p)[3])
 
 #define CHUNK_IHDR MAKE_DWORD('I','H','D','R')
+#define CHUNK_PLTE MAKE_DWORD('P','L','T','E')
+#define CHUNK_TRNS MAKE_DWORD('t','R','N','S')
 #define CHUNK_IDAT MAKE_DWORD('I','D','A','T')
 #define CHUNK_IEND MAKE_DWORD('I','E','N','D')
 
@@ -70,10 +73,11 @@ typedef enum upng_state {
 } upng_state;
 
 typedef enum upng_color {
-	UPNG_LUM		= 0,
-	UPNG_RGB		= 2,
-	UPNG_LUMA		= 4,
-	UPNG_RGBA		= 6
+	UPNG_LUM		= 0,	// 256 shades of gray, 8bit per pixel
+	UPNG_RGB		= 2,	// 24bit RGB values
+	UPNG_IDX		= 3,	// Up to 256 RGBA palette colors, 8bit per pixel
+	UPNG_LUMA		= 4,	// 256 shades of gray plus alpha channel, 16bit per pixel
+	UPNG_RGBA		= 6		// 24bit RGB values plus 8bit alpha channel
 } upng_color;
 
 typedef struct upng_source {
@@ -92,6 +96,9 @@ struct upng_t {
 
 	unsigned char*	buffer;
 	unsigned long	size;
+
+	unsigned char*	palette;
+	unsigned long	palsize;
 
 	upng_error		error;
 	unsigned		error_line;
@@ -854,6 +861,19 @@ static upng_format determine_format(upng_t* upng) {
 		default:
 			return UPNG_BADFORMAT;
 		}
+	case UPNG_IDX:
+		switch (upng->color_depth) {
+		case 1:
+			return UPNG_PALETTE1;
+		case 2:
+			return UPNG_PALETTE2;
+		case 4:
+			return UPNG_PALETTE4;
+		case 8:
+			return UPNG_PALETTE8;
+		default:
+			return UPNG_BADFORMAT;
+		}
 	case UPNG_LUMA:
 		switch (upng->color_depth) {
 		case 1:
@@ -885,11 +905,11 @@ static void upng_free_source(upng_t* upng)
 {
 	if (upng->source.owning != 0) {
 		free((void*)upng->source.buffer);
-	}
+			}
 
 	upng->source.buffer = NULL;
 	upng->source.size = 0;
-	upng->source.owning = 0;
+		upng->source.owning = 0;
 }
 
 /*read the information from the header and store it in the upng_Info. return value is error*/
@@ -938,7 +958,7 @@ upng_error upng_header(upng_t* upng)
 		return upng->error;
 	}
 
-	/* check that the compression method (byte 27) is 0 (only allowed value in spec) */
+	/* check that the compression method (byte 26) is 0 (only allowed value in spec) */
 	if (upng->source.buffer[26] != 0) {
 		SET_ERROR(upng, UPNG_EMALFORMED);
 		return upng->error;
@@ -950,7 +970,7 @@ upng_error upng_header(upng_t* upng)
 		return upng->error;
 	}
 
-	/* check that the compression method (byte 27) is 0 (spec allows 1, but uPNG does not support it) */
+	/* check that the compression method (byte 28) is 0 (spec allows 1, but uPNG does not support it) */
 	if (upng->source.buffer[28] != 0) {
 		SET_ERROR(upng, UPNG_EUNINTERLACED);
 		return upng->error;
@@ -968,6 +988,7 @@ upng_error upng_decode(upng_t* upng)
 	unsigned char* inflated;
 	unsigned long compressed_size = 0, compressed_index = 0;
 	unsigned long inflated_size;
+	unsigned long nbc;
 	upng_error error;
 
 	/* if we have an error state, bail now */
@@ -1029,6 +1050,25 @@ upng_error upng_decode(upng_t* upng)
 			compressed_size += length;
 		} else if (upng_chunk_type(chunk) == CHUNK_IEND) {
 			break;
+		} else if (upng_chunk_type(chunk) == CHUNK_PLTE) {
+			upng->palsize = length;
+			nbc = length / 3;
+		} else if (upng_chunk_type(chunk) == CHUNK_TRNS) {
+			upng->palsize += nbc;
+			switch (upng->format) {
+			case UPNG_PALETTE1:
+				upng->format = UPNG_PALETTEA1;
+				break;
+			case UPNG_PALETTE2:
+				upng->format = UPNG_PALETTEA2;
+				break;
+			case UPNG_PALETTE4:
+				upng->format = UPNG_PALETTEA4;
+				break;
+			case UPNG_PALETTE8:
+				upng->format = UPNG_PALETTEA8;
+				break;
+			}
 		} else if (upng_chunk_critical(chunk)) {
 			SET_ERROR(upng, UPNG_EUNSUPPORTED);
 			return upng->error;
@@ -1055,7 +1095,29 @@ upng_error upng_decode(upng_t* upng)
 		data = chunk + 8;
 
 		/* parse chunks */
-		if (upng_chunk_type(chunk) == CHUNK_IDAT) {
+		if (upng_chunk_type(chunk) == CHUNK_PLTE) {
+			upng->palette = (unsigned char*)malloc(upng->palsize);
+			if (upng->palette == NULL) {
+				SET_ERROR(upng, UPNG_ENOMEM);
+				return upng->error;
+			}
+			if (upng->palsize == length) {
+				memcpy(upng->palette, data, upng->palsize);
+			} else {
+				unsigned char *pal4 = upng->palette;
+				unsigned char *pal3 = data;
+				for (int c = 0; c < nbc; c++) {
+					*pal4++ = *pal3++;
+					*pal4++ = *pal3++;
+					*pal4++ = *pal3++;
+					*pal4++ = 255;
+				}
+			}
+		} else if (upng_chunk_type(chunk) == CHUNK_TRNS) {
+			for (int c = 0; c < length; c++) {
+				upng->palette[c * 4 + 3] = data[c];
+			}
+		} else if (upng_chunk_type(chunk) == CHUNK_IDAT) {
 			memcpy(compressed + compressed_index, data, length);
 			compressed_index += length;
 		} else if (upng_chunk_type(chunk) == CHUNK_IEND) {
@@ -1124,6 +1186,9 @@ static upng_t* upng_new(void)
 
 	upng->buffer = NULL;
 	upng->size = 0;
+
+	upng->palette = NULL;
+	upng->palsize = 0;
 
 	upng->width = upng->height = 0;
 
@@ -1241,6 +1306,7 @@ unsigned upng_get_components(const upng_t* upng)
 {
 	switch (upng->color_type) {
 	case UPNG_LUM:
+	case UPNG_IDX:
 		return 1;
 	case UPNG_RGB:
 		return 3;
@@ -1278,4 +1344,31 @@ const unsigned char* upng_get_buffer(const upng_t* upng)
 unsigned upng_get_size(const upng_t* upng)
 {
 	return upng->size;
+}
+
+const unsigned char* upng_get_palette(const upng_t* upng)
+{
+	return upng->palette;
+}
+
+unsigned upng_get_palsize(const upng_t* upng)
+{
+	unsigned val = upng->palsize;
+
+	switch (upng->format) {
+	case UPNG_PALETTE1:
+	case UPNG_PALETTE2:
+	case UPNG_PALETTE4:
+	case UPNG_PALETTE8:
+		val /= 3;
+		break;
+	case UPNG_PALETTEA1:
+	case UPNG_PALETTEA2:
+	case UPNG_PALETTEA4:
+	case UPNG_PALETTEA8:
+		val /= 4;
+		break;
+	}
+
+	return val;
 }

@@ -3,6 +3,7 @@ uPNG -- derived from LodePNG version 20100808
 
 Copyright (c) 2005-2010 Lode Vandevenne
 Copyright (c) 2010 Sean Middleditch
+Copyright (c) 2024 OlivierP-To8 for palette and transparency
 
 This software is provided 'as-is', without any express or implied
 warranty. In no event will the authors be held liable for any damages
@@ -52,7 +53,15 @@ typedef enum upng_format {
 	UPNG_LUMINANCE_ALPHA1,
 	UPNG_LUMINANCE_ALPHA2,
 	UPNG_LUMINANCE_ALPHA4,
-	UPNG_LUMINANCE_ALPHA8
+	UPNG_LUMINANCE_ALPHA8,
+	UPNG_PALETTE1,
+	UPNG_PALETTE2,
+	UPNG_PALETTE4,
+	UPNG_PALETTE8,
+	UPNG_PALETTEA1,
+	UPNG_PALETTEA2,
+	UPNG_PALETTEA4,
+	UPNG_PALETTEA8
 } upng_format;
 
 typedef struct upng_t upng_t;
@@ -77,5 +86,7 @@ upng_format	upng_get_format		(const upng_t* upng);
 
 const unsigned char*	upng_get_buffer		(const upng_t* upng);
 unsigned				upng_get_size		(const upng_t* upng);
+const unsigned char*	upng_get_palette	(const upng_t* upng);
+unsigned				upng_get_palsize	(const upng_t* upng);
 
 #endif /*defined(UPNG_H)*/
