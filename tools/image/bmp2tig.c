@@ -36,12 +36,13 @@ typedef struct
 	unsigned char alpha;
 } RGBQUAD;
 
-unsigned short getCol(unsigned char r, unsigned char g, unsigned b)
+unsigned short getCol(unsigned char r, unsigned char g, unsigned char b)
 {
 	r = (r & 0xf8) >> 3;
 	g = (g & 0xf8) >> 3;
 	b = (b & 0xf8) >> 3;
 	unsigned short val = (r << 10) | (g << 5) | b;
+	return val;
 }
 
 #define PALasRGB 0
@@ -73,6 +74,7 @@ int main(int argc, char **argv)
 			th.width = bmp.width;
 			th.height = bmp.height;
 			th.wVram = th.width;
+			th.reserved = 0;
 
 			FILE *fo = fopen(argv[2], "wb");
 			if (fo != NULL)
