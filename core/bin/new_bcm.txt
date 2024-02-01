@@ -1,0 +1,16 @@
+BCM0
+type (triangle fixe / float)
+size nweight (1)
+size nametexture (2)
+size vertex
+size index
+size group
+offset vertex
+offset vt
+offset vn
+offset vc
+offset index
+boxf[8*3]
+ratiof
+boxi[8*3]
+ratioi

@@ -1,21 +1,21 @@
-
+#define KSEG1 0x1F800000
 
 
 #define SCRATHPAD     0x1F800000
 #define SCRATHPAD_END 0x1F8003FF
 
-#define JOY_DATA 0x1F801040
-#define JOY_STAT 0x1F801044
-#define JOY_MODE 0x1F801048
-#define JOY_CTRL 0x1F80104A
-#define JOY_BAUD 0x1F80104E
+#define JOY_DATA KSEG1+0x1040
+#define JOY_STAT KSEG1+0x1044
+#define JOY_MODE KSEG1+0x1048
+#define JOY_CTRL KSEG1+0x104A
+#define JOY_BAUD KSEG1+0x104E
 
-#define SIO_DATA 0x1F801050
-#define SIO_STAT 0x1F801054
-#define SIO_MODE 0x1F801058
-#define SIO_CTRL 0x1F80105A
-#define SIO_MISC 0x1F80105C
-#define SIO_BAUD 0x1F80105E
+#define SIO_DATA KSEG1+0x1050
+#define SIO_STAT KSEG1+0x1054
+#define SIO_MODE KSEG1+0x1058
+#define SIO_CTRL KSEG1+0x105A
+#define SIO_MISC KSEG1+0x105C
+#define SIO_BAUD KSEG1+0x105E
 
 #define GP0_CMD_COLOR(cmd,r,g,b) \
 		(r	<<  0  ) |	\
@@ -57,56 +57,54 @@
 		(unk1  <<  29 ) |	\
 		(unk2  <<  30 )
 
-#define SCRATCHPAD	0x1F800000
-
 //Interrupt Control
-#define I_STAT		0x1F801070
-#define I_MASK		0x1F801074
+#define I_STAT		KSEG1+0x1070
+#define I_MASK		KSEG1+0x1074
 
 //DMA Registers
-#define D0_MADR		0x1F801080
-#define D0_BCR		0x1F801084
-#define D0_CHCR		0x1F801088
+#define D0_MADR		KSEG1+0x1080
+#define D0_BCR		KSEG1+0x1084
+#define D0_CHCR		KSEG1+0x1088
 
-#define D1_MADR		0x1F801090
-#define D1_BCR		0x1F801094
-#define D1_CHCR		0x1F801098
+#define D1_MADR		KSEG1+0x1090
+#define D1_BCR		KSEG1+0x1094
+#define D1_CHCR		KSEG1+0x1098
 
-#define D2_MADR		0x1F8010A0
-#define D2_BCR		0x1F8010A4
-#define D2_CHCR		0x1F8010A8
+#define D2_MADR		KSEG1+0x10A0
+#define D2_BCR		KSEG1+0x10A4
+#define D2_CHCR		KSEG1+0x10A8
 
-#define D3_MADR		0x1F8010B0
-#define D3_BCR		0x1F8010B4
-#define D3_CHCR		0x1F8010B8
+#define D3_MADR		KSEG1+0x10B0
+#define D3_BCR		KSEG1+0x10B4
+#define D3_CHCR		KSEG1+0x10B8
 
-#define D4_MADR		0x1F8010C0
-#define D4_BCR		0x1F8010C4
-#define D4_CHCR		0x1F8010C8
+#define D4_MADR		KSEG1+0x10C0
+#define D4_BCR		KSEG1+0x10C4
+#define D4_CHCR		KSEG1+0x10C8
 
-#define D5_MADR		0x1F8010D0
-#define D5_BCR		0x1F8010D4
-#define D5_CHCR		0x1F8010D8
+#define D5_MADR		KSEG1+0x10D0
+#define D5_BCR		KSEG1+0x10D4
+#define D5_CHCR		KSEG1+0x10D8
 
-#define D6_MADR		0x1F8010E0
-#define D6_BCR		0x1F8010E4
-#define D6_CHCR		0x1F8010E8
+#define D6_MADR		KSEG1+0x10E0
+#define D6_BCR		KSEG1+0x10E4
+#define D6_CHCR		KSEG1+0x10E8
 
-#define DPCR		0x1F8010F0
-#define DICR		0x1F8010F4
+#define DPCR		KSEG1+0x10F0
+#define DICR		KSEG1+0x10F4
 
-#define TIMERV0		0x1F801100
-#define TIMERM0		0x1F801104
+#define TIMERV0		KSEG1+0x1100
+#define TIMERM0		KSEG1+0x1104
 
-#define TIMERV1		0x1F801110
-#define TIMERM1		0x1F801114
+#define TIMERV1		KSEG1+0x1110
+#define TIMERM1		KSEG1+0x1114
 
-#define TIMERV2		0x1F801120
-#define TIMERM2		0x1F801124
+#define TIMERV2		KSEG1+0x1120
+#define TIMERM2		KSEG1+0x1124
 
 //GPU Registers
-#define GP0			0x1F801810
-#define GP1			0x1F801814
+#define GP0			KSEG1+0x1810
+#define GP1			KSEG1+0x1814
 
 // GPU COMMANDS
 //M = Monochrome , T=Textured , S = Shaded
@@ -220,15 +218,35 @@ enum
 
 static inline void PS1_GP1(unsigned int command, unsigned int param)
 {
-	RW_REGISTER_U32(GP1) = (command << 0x18) | param;
+	RW_REGISTER_U32(GP1) = (command << 24) | param;
 }
 
 static inline void PS1_GP0(unsigned int command, unsigned int param)
 {
-	RW_REGISTER_U32(GP0) = (command << 0x18) | param;
+	RW_REGISTER_U32(GP0) = (command << 24) | param;
 }
 
 void PS1_Init(uint32_t width,uint32_t height);
+void PS1_GTE_Init();
+void SYSCALL_EnterCriticalSection();
+void SYSCALL_ExitCriticalSection();
+void PolySDKInitOT();
+
+int  BIOS_FileOpen(const char *filename,int accessmode);
+void BIOS_FileSeek(int fd,int offset,int seektype);
+void BIOS_FileRead(int fd,void* dst,int length);
+void BIOS_FileWrite(int fd,void* dst,int length);
+void BIOS_FileClose(int fd);
+void BIOS_Exit();
+
+void BIOS_FlushCache();
+void BIOS_CdInit();
+void BIOS_CdRemove();
+
+void BIOS_InitPad(void *buf1,int siz1,void *buf2,int siz2);
+void BIOS_StartPad();
+void BIOS_StopPad();
+
 /*
 void gpu_ctrl(unsigned int command, unsigned int param)
 {

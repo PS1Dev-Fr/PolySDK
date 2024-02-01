@@ -8,14 +8,41 @@ SKL -> PS1 SKL
 
 PACK PS1 -> 128Kio bloc
 
+Memort MAP 32 bloc
+0 Bloc (used)
+1 Bloc (program)
+2 bloc (data)
+
+31 bloc (Stack)
+
+0-14 (128Kio)
+
+PolySDK_Block_Load(0,NAME_ID); 
+
 
 //Code
 PolySound(SFX,0,Volume);
 
-PolyLoadSAMPLE();
-PolyLoadMusic(0,buffer);
-PolyLoadMusic(1,buffer);
+PolyUploadSAMPLE(64,buffer);
+PolyLoadMusic(1,xmbuffer);
 PolyMusic(CH1,Volume);
+
+//---------
+Load_TILEMAP
+LOAD_TEXTURE
+
+
+Load_Update_VRAM(void,buffer,x,y,size)
+Load_Data_Manager(void* data);
+void PolySDK_Scene_Clear(u32 id);
+u32 PolySDK_Scene_Push(u32 type,void*buffer1,void*buffer2);
+
+
+//-------
+
+Polyinit
+
+LoadCDBuffer(0);
 
 GAMELOOP(func)
 (
