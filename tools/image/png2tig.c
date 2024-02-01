@@ -2,7 +2,7 @@
 #include <string.h>
 
 #include "upng.h"
-#include "../../core/include/texture.h"
+#include "texture.h"
 
 unsigned short getCol(unsigned char r, unsigned char g, unsigned char b, unsigned char a)
 {
@@ -50,7 +50,7 @@ int main(int argc, char **argv)
 	{
 	case UPNG_RGB8:
 	case UPNG_RGBA8:
-		th.mode = TEXTURE_RGB5;
+		th.mode = TEXTURE_RGB1555;
 		break;
 	case UPNG_PALETTE8:
 	case UPNG_PALETTEA8:
@@ -78,7 +78,7 @@ int main(int argc, char **argv)
 		unsigned char r, g, b, alpha = 0;
 		switch (th.mode)
 		{
-		case TEXTURE_RGB5:
+		case TEXTURE_RGB1555:
 			for (unsigned int y = 0; y < h; y++)
 			{
 				for (unsigned int x = 0; x < w; x++)

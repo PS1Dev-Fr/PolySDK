@@ -7,5 +7,5 @@ typedef struct
 {
     unsigned char signature[4];
     unsigned char mode, reserved;
-    unsigned short width, height;
+    unsigned short width, height, wVram;
 } TEXTURE_HEADER;

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../../core/include/texture.h"
+#include "texture.h"
 
 typedef struct
 {
@@ -161,7 +161,7 @@ int main(int argc, char **argv)
 					}
 					break;
 				case 24:
-					th.mode = TEXTURE_RGB5;
+					th.mode = TEXTURE_RGB1555;
 					fwrite(&th, sizeof(TEXTURE_HEADER), 1, fo);
 					{
 						unsigned char col[3];
