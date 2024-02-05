@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "texture.h"
+#include "../tig2image/texture.h"
 
 typedef struct
 {
@@ -73,8 +73,9 @@ int main(int argc, char **argv)
 
 			th.width = bmp.width;
 			th.height = bmp.height;
-			th.wVram = th.width;
 			th.reserved = 0;
+			th.unk2 = 0;
+			th.unk3 = 0;
 
 			FILE *fo = fopen(argv[2], "wb");
 			if (fo != NULL)
@@ -86,7 +87,7 @@ int main(int argc, char **argv)
 					th.mode = TEXTURE_RGB5;
 #else
 					th.mode = TEXTURE_PAL4;
-					th.wVram /= 4;
+					th.pitch = th.width << 1;
 #endif
 					fwrite(&th, sizeof(TEXTURE_HEADER), 1, fo);
 					{
@@ -127,7 +128,7 @@ int main(int argc, char **argv)
 					th.mode = TEXTURE_RGB5;
 #else
 					th.mode = TEXTURE_PAL8;
-					th.wVram /= 2;
+					th.pitch = th.width;
 #endif
 					fwrite(&th, sizeof(TEXTURE_HEADER), 1, fo);
 					{
@@ -162,6 +163,7 @@ int main(int argc, char **argv)
 					break;
 				case 24:
 					th.mode = TEXTURE_RGB1555;
+					th.pitch = th.width >> 1;
 					fwrite(&th, sizeof(TEXTURE_HEADER), 1, fo);
 					{
 						unsigned char col[3];

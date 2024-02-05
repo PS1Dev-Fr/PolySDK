@@ -8,6 +8,7 @@
 #include <libgte.h>
 #include <libetc.h>
 #include <libgpu.h>
+#include <libcd.h>
 
 #define VMODE 1 // Video Mode : 0 : NTSC, 1: PAL
 #define SCREENXRES 320
@@ -21,11 +22,7 @@ char primbuff[2][32768];     // double primitive buffer of length 32768 * 8 =  2
 char *nextpri = primbuff[0]; // pointer to the next primitive in primbuff. Initially, points to the first bit of primbuff[0]
 short db = 0;                // index of which buffer is used, values 0, 1
 
-#include "../../core/include/texture.h"
-
-#include "minou4.h"
-#include "minou8.h"
-#include "minou16.h"
+#include "../../tools/image/texture.h"
 
 void init(void)
 {
@@ -51,15 +48,24 @@ void init(void)
 
 unsigned char loadTIG(unsigned char *tex, RECT *rtex, RECT *rpal)
 {
-    TEXTURE_HEADER *th = (TEXTURE_HEADER *)tex;
+    char filebuffer[0x20800];
+    CdlFILE fp;
+
+    if (CdSearchFile(&fp, tex))
+    {
+        CdReadFile(tex, filebuffer, 0);
+        CdReadSync(0, 0);
+    }
+
+    TEXTURE_HEADER *th = (TEXTURE_HEADER *)filebuffer;
     if ((th->signature[0] == 'T') && (th->signature[1] == 'I') && (th->signature[2] == 'G'))
     {
         unsigned int offset = sizeof(TEXTURE_HEADER);
-        rtex->w = th->wVram;
+        rtex->w = th->width >> (2 - th->mode);
         rtex->h = th->height;
 
         // Transfer the data from memory to VRAM at position rtex.x, rtex.y
-        LoadImage(rtex, (u_long *)(tex + offset));
+        LoadImage(rtex, (u_long *)(filebuffer + offset));
         DrawSync(0); // Wait for the drawing to end
 
         rtex->w = th->width;
@@ -68,12 +74,12 @@ unsigned char loadTIG(unsigned char *tex, RECT *rtex, RECT *rpal)
         {
         case TEXTURE_PAL8:
             offset += th->width * th->height;
-            LoadImage(rpal, (u_long *)(tex + offset));
+            LoadImage(rpal, (u_long *)(filebuffer + offset));
             DrawSync(0);
             break;
         case TEXTURE_PAL4:
             offset += (th->width * th->height) / 2;
-            LoadImage(rpal, (u_long *)(tex + offset));
+            LoadImage(rpal, (u_long *)(filebuffer + offset));
             DrawSync(0);
             break;
         }
@@ -128,9 +134,10 @@ int main(void)
 
     // Define 3 pointers to DR_TPAGE struct. We need three because our images are on three different texture pages.
     init();
-    unsigned char mode16 = loadTIG(minou16_array, &rtex16, 0);   // Load everything to vram
-    unsigned char mode8 = loadTIG(minou8_array, &rtex8, &rpal8); // Load everything to vram
-    unsigned char mode4 = loadTIG(minou4_array, &rtex4, &rpal4); // Load everything to vram
+    CdInit();
+    unsigned char mode16 = loadTIG("\\MINOU16.TIG;1", &rtex16, 0);   // Load everything to vram
+    unsigned char mode8 = loadTIG("\\MINOU8.TIG;1", &rtex8, &rpal8); // Load everything to vram
+    unsigned char mode4 = loadTIG("\\MINOU4.TIG;1", &rtex4, &rpal4); // Load everything to vram
 
     while (1)
     {

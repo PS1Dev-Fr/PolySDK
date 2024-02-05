@@ -12,16 +12,21 @@ LDFLAGS += -Wl,--end-group
 
 include ../../third_party/nugget/common.mk
 
-texture.c: tools minou16.h minou8.h minou4.h
+all: dep tools $(BINDIR)$(TARGET).$(TYPE) democd
 
 tools:
 	make -C ../../tools
 
-%.tig: %.png
-	../../tools/image/png2tig $< $@
-
 %.tig: %.bmp
 	../../tools/image/bmp2tig $< $@
 
-%.h: %.tig
-	../../tools/bin2c $(patsubst %.h,%,$@) < $< > $@
+%.tig: %.png
+	../../tools/image/png2tig $< $@
+
+democd: minou16.tig minou8.tig minou4.tig
+	mkdir -p cd_root
+	mv $(TARGET).$(TYPE) cd_root/PS1_DEMO.EXE
+	cp minou*.tig cd_root
+	mkisofs -o PS1_demo.iso -V PS1_DEMO -sysid PLAYSTATION cd_root
+	../../tools/mkpsxiso PS1_demo.iso PS1_demo.bin ../../core/bin/infousa.dat
+#	retroarch -L "$(HOME)/.config/retroarch/cores/pcsx_rearmed_libretro.so" PS1_demo.cue

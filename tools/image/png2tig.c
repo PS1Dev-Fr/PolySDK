@@ -2,7 +2,7 @@
 #include <string.h>
 
 #include "upng.h"
-#include "texture.h"
+#include "../tig2image/texture.h"
 
 unsigned short getCol(unsigned char r, unsigned char g, unsigned char b, unsigned char a)
 {
@@ -11,7 +11,7 @@ unsigned short getCol(unsigned char r, unsigned char g, unsigned char b, unsigne
 	b = (b & 0xf8) >> 3;
 	a = (a & 0x80);
 	unsigned short val = (a << 8) | (r << 10) | (g << 5) | b;
-	return val;
+		return val;
 }
 
 int main(int argc, char **argv)
@@ -43,24 +43,26 @@ int main(int argc, char **argv)
 
 	th.width = upng_get_width(upng);
 	th.height = upng_get_height(upng);
-	th.wVram = th.width;
 	th.reserved = 0;
+	th.unk2 = 0;
+	th.unk3 = 0;
 
 	switch (upng_get_format(upng))
 	{
 	case UPNG_RGB8:
 	case UPNG_RGBA8:
 		th.mode = TEXTURE_RGB1555;
+		th.pitch = th.width << 1;
 		break;
 	case UPNG_PALETTE8:
 	case UPNG_PALETTEA8:
 		th.mode = TEXTURE_PAL8;
-		th.wVram /= 2;
+		th.pitch = th.width;
 		break;
 	case UPNG_PALETTE4:
 	case UPNG_PALETTEA4:
 		th.mode = TEXTURE_PAL4;
-		th.wVram /= 4;
+		th.pitch = th.width >> 1;
 		break;
 	default:
 		th.mode = -1;
